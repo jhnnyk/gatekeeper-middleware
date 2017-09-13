@@ -64,11 +64,20 @@ const USERS = [
 //  4. if matching user found, add the user object to the request object
 //     (aka, `req.user = matchedUser`)
 function gateKeeper(req, res, next) {
-  // your code should replace the line below
+  let authUser = {}
+  
+  if (req.get('x-username-and-password')) {
+    const unauthenticatedUser = queryString.parse(req.get('x-username-and-password'))
+    authUser = USERS.find(user => {
+      return user.userName === unauthenticatedUser.user && user.password === unauthenticatedUser.pass
+    })
+  }
+  req.user = authUser
   next();
 }
 
 // Add the middleware to your app!
+app.use(gateKeeper)
 
 // this endpoint returns a json object representing the user making the request,
 // IF they supply valid user credentials. This endpoint assumes that `gateKeeper` 
@@ -85,6 +94,6 @@ app.get("/api/users/me", (req, res) => {
   return res.json({firstName, lastName, id, userName, position});
 });
 
-app.listen(8080, () => {
-  console.log(`Your app is listening on port 8080`);
+app.listen(process.env.PORT, () => {
+  console.log(`Your app is listening on port ${process.env.PORT}`);
 });
